@@ -1,3 +1,43 @@
+# ==========================================
+# 1. Environment & Secrets (PALING PENTING)
+# ==========================================
+.env
+.env.local
+.env.*.local
+!.env.example  # Template env tetap di-commit
+
+# ==========================================
+# 2. Virtual Environment
+# ==========================================
+venv/
+.venv/
+env/
+ENV/
+
+# ==========================================
+# 3. File Besar & Dataset (Share via Drive/Git LFS)
+# ==========================================
+data/raw/*.pdf
+data/raw/*.data
+models/*.pkl
+vectorstore/
+
+# ==========================================
+# 4. File Sampah Python & Jupyter
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+.ipynb_checkpoints/
+*.log
+
+# ==========================================
+# 5. File Sistem Operasi (OS)
+# ==========================================
+.DS_Store  # Mac
+Thumbs.db  # Windows
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
