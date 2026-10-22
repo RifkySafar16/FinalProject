@@ -1,37 +1,41 @@
 # Deploy — Heart Risk Advisor
 
-Aplikasi di-deploy ke **Render** (Web Service, Docker, paket gratis).
+Aplikasi online di-deploy ke **Streamlit Community Cloud** (gratis, tanpa kartu).
+Folder ini juga berisi konfigurasi **Docker** (dipakai untuk menjalankan aplikasi
+lengkap di komputer/server mana pun, dan siap dipakai di Render bila tim punya akun
+dengan kartu terverifikasi).
 
 ## Isi folder
 
 | File | Fungsi |
 |---|---|
-| `../Dockerfile` | Resep image: pasang paket, latih model, buat indeks RAG |
-| `../.dockerignore` | File yang tidak ikut ke image (venv, model lokal, `.env`) |
-| `start.sh` | Menyalakan backend FastAPI (internal, port 8000) + frontend Streamlit (port `$PORT`) |
-| `requirements-deploy.txt` | Paket Python yang sudah diuji (tanpa torch) |
+| `streamlit_cloud/streamlit_app.py` | Peluncur untuk Streamlit Cloud: siapkan model + indeks RAG, nyalakan backend FastAPI, lalu tampilkan frontend |
+| `streamlit_cloud/requirements.txt` | Paket untuk Streamlit Cloud (dibaca lebih dulu daripada `requirements.txt` di root, sehingga torch tidak ikut terpasang) |
+| `../Dockerfile`, `../.dockerignore` | Image Docker: pasang paket, latih model, buat indeks RAG |
+| `start.sh` | Perintah start di dalam container: backend (port 8000, internal) + frontend (port `$PORT`, default 10000) |
+| `requirements-deploy.txt` | Paket yang sudah diuji untuk Docker (isi sama dengan `streamlit_cloud/requirements.txt`) |
 | `who_cvd_guideline_2007.pdf` | Pedoman WHO 2007 untuk RAG (`data/raw/` di-ignore, jadi disimpan di sini) |
 
-## Pengaturan Render
+## Streamlit Community Cloud
+
+Streamlit Cloud hanya bisa deploy dari repo milik sendiri, jadi aplikasi dijalankan
+dari **fork** repo ini (semua branch ikut di-fork).
 
 | Isian | Nilai |
 |---|---|
-| Source | Public Git Repository: `https://github.com/RifkySafar16/FinalProject` |
+| Repository | `<akun-github>/FinalProject` (fork) |
 | Branch | `Yu` |
-| Language / Runtime | Docker |
-| Dockerfile Path | `./Dockerfile` |
-| Instance Type | Free |
-| Environment Variable | `GROQ_API_KEY` = kunci dari console.groq.com |
+| Main file path | `deploy/streamlit_cloud/streamlit_app.py` |
+| Python version (Advanced settings) | 3.12 |
+| Secrets (Advanced settings) | `GROQ_API_KEY = "gsk_..."` |
 
-Setelah push ke branch `Yu`, buka Render → **Manual Deploy → Deploy latest commit**.
+- Pengunjung pertama setelah server menyala menunggu ±1–3 menit (latih model + buat indeks).
+  Pengunjung berikutnya langsung masuk.
+- Aplikasi tidur setelah 12 jam tanpa pengunjung; buka URL beberapa menit sebelum demo.
+- Untuk memperbarui aplikasi setelah ada perubahan di repo tim: buka fork di GitHub →
+  **Sync fork**, lalu di Streamlit Cloud pilih **Reboot app**.
 
-## Catatan paket gratis
-
-- RAM 512 MB. Pemakaian terukur ±280 MB (backend ±190 MB, frontend ±95 MB).
-- Aplikasi tidur setelah 15 menit tanpa pengunjung; akses berikutnya butuh ±1 menit.
-  Buka URL beberapa menit sebelum demo.
-
-## Menjalankan dengan Docker di komputer sendiri
+## Docker (komputer sendiri / server)
 
 ```bash
 docker build -t heart-risk-advisor .
@@ -39,3 +43,5 @@ docker run -p 10000:10000 -e GROQ_API_KEY=xxx heart-risk-advisor
 ```
 
 Lalu buka http://localhost:10000.
+
+Pemakaian RAM terukur ±280 MB (backend ±190 MB, frontend ±95 MB).
