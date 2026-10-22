@@ -116,10 +116,10 @@ Setelah perbaikan, jalankan ulang `tests/test_injection.py` dan isi tabel ini.
 
 | Temuan | Issue GitHub | Status | Hasil uji ulang |
 |---|---|---|---|
-| F-01 | (isi nomor issue) | Terbuka | (isi setelah perbaikan) |
-| F-02 | (isi nomor issue) | Terbuka | (isi setelah perbaikan) |
-| F-03 | (isi nomor issue) | Terbuka | (isi setelah perbaikan) |
-| F-04 | (isi nomor issue) | Terbuka | (isi setelah perbaikan) |
+| F-01 | #1 | Terbuka | (isi setelah perbaikan) |
+| F-02 | #2 | Terbuka | (isi setelah perbaikan) |
+| F-03 | #2 | Terbuka | (isi setelah perbaikan) |
+| F-04 | #3 | Terbuka | (isi setelah perbaikan) |
 
 Catatan: INJ-03 saat ini ditandai `xfail` di berkas uji. Setelah F-01 diperbaiki, hapus tanda `known_issue` pada INJ-03 supaya tes menjadi tes biasa yang harus lulus.
 
