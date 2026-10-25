@@ -110,7 +110,7 @@ Bila informasi tidak ada di pedoman, jawabannya "Maaf, informasi tidak ditemukan
 
 ### Perilaku yang perlu diketahui
 - Waktu respons sekitar 1 sampai 3 detik, karena memanggil LLM di Groq (butuh internet dan `GROQ_API_KEY`).
-- Saat LLM mengembalikan jawaban kosong, fungsi `ask()` melempar error (Issue #3). Perilaku `/chat` pada kasus ini belum diverifikasi.
+- Saat LLM mengembalikan jawaban kosong, fungsi `ask()` melempar error (Issue #3). Endpoint `/chat` pada kasus ini mengembalikan **500 Internal Server Error** (terverifikasi 23 Oktober 2026).
 - Chat belum mengingat pertanyaan sebelumnya. Setiap permintaan berdiri sendiri.
 
 ## Contoh pemakaian dari Python
