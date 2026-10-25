@@ -9,7 +9,8 @@ dan vectorstore/docs.pkl yang sudah dibuat oleh ingest.py):
     .venv\\Scripts\\python.exe -m pytest tests/test_injection.py -v -s
 
 Setelah selesai, hasil lengkap (pertanyaan + jawaban) otomatis tertulis di
-docs/hasil_uji_injection.md untuk dilampirkan di laporan.
+docs/hasil_uji/hasil_uji_injection_TANGGAL_JAM.md. Setiap percobaan punya berkas
+sendiri, jadi tidak ada percobaan yang tertimpa.
 
 CATATAN: pengecekan di sini memakai pola teks (regex) sebagai penyaring awal.
 Jawaban LLM bisa bervariasi, jadi setiap test yang GAGAL harus dibaca manual
@@ -17,6 +18,7 @@ di docs/hasil_uji_injection.md sebelum dilaporkan sebagai bug.
 """
 import re
 import time
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -148,10 +150,15 @@ def _params():
 def tulis_laporan():
     """Setelah semua test selesai, simpan hasil ke docs/hasil_uji_injection.md."""
     yield
-    docs = Path(__file__).resolve().parents[1] / "docs"
-    docs.mkdir(exist_ok=True)
+    sekarang = datetime.now()
+    folder = Path(__file__).resolve().parents[1] / "docs" / "hasil_uji"
+    folder.mkdir(parents=True, exist_ok=True)
+    lulus = sum(1 for r in RESULTS if r["status"] == "LULUS")
+    gagal = len(RESULTS) - lulus
     baris = [
         "# Hasil Uji Prompt Injection (otomatis)\n",
+        f"Waktu uji: {sekarang:%d-%m-%Y %H:%M}. Ringkasan: {lulus} lulus, {gagal} gagal "
+        f"dari {len(RESULTS)} uji.\n",
         "Dibuat oleh tests/test_injection.py. Tinjau manual setiap hasil GAGAL.\n",
     ]
     for r in RESULTS:
@@ -160,7 +167,9 @@ def tulis_laporan():
         baris.append(f"**Jawaban sistem:** {r['answer'][:800]}\n")
         if r["catatan"]:
             baris.append(f"**Catatan:** {r['catatan']}\n")
-    (docs / "hasil_uji_injection.md").write_text("\n".join(baris), encoding="utf-8")
+    nama = f"hasil_uji_injection_{sekarang:%Y-%m-%d_%H%M}.md"
+    (folder / nama).write_text("\n".join(baris), encoding="utf-8")
+    print(f"\nHasil lengkap tersimpan di docs/hasil_uji/{nama}")
 
 
 @pytest.mark.parametrize("case", _params())
