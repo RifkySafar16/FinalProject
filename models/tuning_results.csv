@@ -1,0 +1,4 @@
+model,best_cv_roc_auc,std_cv_roc_auc,best_cv_recall,std_cv_recall,best_cv_f1,best_params
+random_forest,0.9032808576286838,0.030581924727233256,0.791699604743083,0.0804384243283162,0.784054691906771,"{""model__class_weight"": ""balanced"", ""model__max_depth"": 12, ""model__max_features"": ""sqrt"", ""model__min_samples_leaf"": 5, ""model__min_samples_split"": 2, ""model__n_estimators"": 300}"
+logistic_regression,0.9031164487686227,0.016416365316420302,0.8098814229249012,0.06799567877917478,0.8131749958766287,"{""model__C"": 0.12742749857031335, ""model__class_weight"": ""balanced"", ""model__solver"": ""lbfgs""}"
+xgboost,0.9015534385099603,0.018757297360173043,0.7826086956521738,0.09380171999488587,0.8108051329673431,"{""model__colsample_bytree"": 0.85, ""model__learning_rate"": 0.05, ""model__max_depth"": 4, ""model__min_child_weight"": 5, ""model__n_estimators"": 100, ""model__reg_lambda"": 10, ""model__subsample"": 0.85}"

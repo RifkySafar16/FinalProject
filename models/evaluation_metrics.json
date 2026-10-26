@@ -1,0 +1,57 @@
+{
+  "model": "random_forest",
+  "accuracy": 0.8688524590163934,
+  "precision": 0.8125,
+  "recall": 0.9285714285714286,
+  "f1": 0.8666666666666667,
+  "roc_auc": 0.9512987012987013,
+  "confusion_matrix": [
+    [
+      27,
+      6
+    ],
+    [
+      2,
+      26
+    ]
+  ],
+  "classification_report": {
+    "absence": {
+      "precision": 0.9310344827586207,
+      "recall": 0.8181818181818182,
+      "f1-score": 0.8709677419354839,
+      "support": 33.0
+    },
+    "presence": {
+      "precision": 0.8125,
+      "recall": 0.9285714285714286,
+      "f1-score": 0.8666666666666667,
+      "support": 28.0
+    },
+    "accuracy": 0.8688524590163934,
+    "macro avg": {
+      "precision": 0.8717672413793103,
+      "recall": 0.8733766233766234,
+      "f1-score": 0.8688172043010753,
+      "support": 61.0
+    },
+    "weighted avg": {
+      "precision": 0.8766252119841718,
+      "recall": 0.8688524590163934,
+      "f1-score": 0.8689934778776661,
+      "support": 61.0
+    }
+  },
+  "selection_metric": "roc_auc",
+  "best_params": {
+    "model__n_estimators": 300,
+    "model__min_samples_split": 2,
+    "model__min_samples_leaf": 5,
+    "model__max_features": "sqrt",
+    "model__max_depth": 12,
+    "model__class_weight": "balanced"
+  },
+  "train_rows": 242,
+  "test_rows": 61,
+  "cv_splits": 5
+}
