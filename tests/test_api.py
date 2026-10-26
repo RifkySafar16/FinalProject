@@ -154,7 +154,6 @@ def test_chat_pertanyaan_hanya_spasi():
     )
 
 
-@pytest.mark.xfail(reason="Issue #3: jawaban kosong dari LLM menyebabkan error", strict=False)
 def test_chat_jawaban_kosong_tidak_error_500():
     """Serangan INJ-10 lewat endpoint: tidak boleh 500 (terkait Issue #3)."""
     _butuh_llm()
