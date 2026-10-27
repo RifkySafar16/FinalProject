@@ -1,5 +1,6 @@
 import os
 import pickle
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import TypedDict
@@ -15,6 +16,28 @@ from src.rag.prompts import RAG_PROMPT
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 DOCS_FILE = PROJECT_ROOT / "vectorstore" / "docs.pkl"
 DISCLAIMER = "⚠️ Ini bukan nasihat medis."
+
+# --- Pengaman keluaran (output guardrail) -----------------------------------
+# Perbaikan untuk temuan uji keamanan QA (Issue #1, #2, #3 di GitHub).
+FALLBACK_ANSWER = "Maaf, informasi tidak ditemukan."
+SAFE_DOSE_MESSAGE = (
+    "Maaf, aplikasi ini tidak dapat memberikan dosis atau anjuran penggunaan obat. "
+    "Dosis dan penggunaan obat harus ditentukan oleh dokter atau apoteker setelah pemeriksaan."
+)
+SAFE_SHORT_MESSAGE = (
+    "Maaf, pertanyaan kesehatan tidak dapat dijawab hanya dengan satu kata. "
+    "Silakan konsultasikan kondisi Anda dengan dokter atau tenaga kesehatan."
+)
+# Angka + satuan obat. Satuan hasil lab seperti "190 mg/dl" sengaja dikecualikan.
+DOSE_PATTERN = re.compile(
+    r"\d+(?:[.,]\d+)?\s?(?:mg|miligram|mcg|mikrogram|tablet|kapsul)\b(?!\s*/\s*(?:dl|l)\b)",
+    re.IGNORECASE,
+)
+# Kata yang menandakan konteks obat. Pengaman hanya aktif jika angka dosis DAN konteks obat ada.
+DRUG_CONTEXT = re.compile(
+    r"\b(?:dosis|aspirin|obat|statin|tablet|kapsul|minum|diminum|resep)\w*",
+    re.IGNORECASE,
+)
 
 load_dotenv(PROJECT_ROOT / ".env")
 
@@ -66,6 +89,21 @@ def get_rag_components() -> tuple[BM25Retriever, ChatGroq]:
     return retriever, llm
 
 
+def _terapkan_pengaman(question: str, answer: str) -> str:
+    """Periksa jawaban LLM sebelum dikirim ke pengguna.
+
+    - Jawaban hanya satu kata (mis. "Tidak") diganti penjelasan yang merujuk ke dokter.
+    - Jawaban yang memuat angka dosis obat diganti pesan aman.
+    Jawaban lain dikembalikan apa adanya.
+    """
+    teks = answer.replace(DISCLAIMER, "").strip()
+    if len(teks.split()) < 2:
+        return SAFE_SHORT_MESSAGE
+    if DOSE_PATTERN.search(teks) and DRUG_CONTEXT.search(f"{question} {teks}"):
+        return SAFE_DOSE_MESSAGE
+    return answer
+
+
 def ask(question: str) -> AskResponse:
     if not isinstance(question, str) or not question.strip():
         raise ValueError("Pertanyaan tidak boleh kosong.")
@@ -75,7 +113,8 @@ def ask(question: str) -> AskResponse:
     translate_chain = TRANSLATE_PROMPT | llm | StrOutputParser()
     english_query = translate_chain.invoke({"question": question}).strip()
     if not english_query:
-        raise RuntimeError("Model tidak menghasilkan terjemahan pertanyaan.")
+        # Cadangan: pakai pertanyaan asli bila terjemahan kosong (sebelumnya melempar error).
+        english_query = question.strip()
 
     source_documents = retriever.invoke(english_query)
     answer_chain = RAG_PROMPT | llm | StrOutputParser()
@@ -86,7 +125,9 @@ def ask(question: str) -> AskResponse:
         }
     ).strip()
     if not answer:
-        raise RuntimeError("Model tidak menghasilkan jawaban.")
+        # Sebelumnya melempar RuntimeError (Issue #3); sekarang memakai jawaban cadangan.
+        answer = FALLBACK_ANSWER
+    answer = _terapkan_pengaman(question, answer)
     if not answer.endswith(DISCLAIMER):
         answer = f"{answer} {DISCLAIMER}"
 

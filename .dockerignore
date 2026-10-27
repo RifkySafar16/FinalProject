@@ -1,0 +1,14 @@
+# File yang tidak ikut ke dalam image Docker
+.git
+.venv
+venv
+env
+__pycache__
+*.pyc
+.pytest_cache
+.env
+models
+vectorstore
+data/raw
+notebooks
+.DS_Store
