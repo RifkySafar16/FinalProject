@@ -54,3 +54,18 @@ class PredictionResponse(BaseModel):
     prediction: Literal[0, 1]
     label: Literal["absence", "presence"]
     probability_presence: float
+
+
+class RiskFactorResponse(BaseModel):
+    feature: str
+    value: float
+    points: int
+    reason: str
+
+
+class RiskPredictionResponse(BaseModel):
+    risk_level: Literal["low", "moderate", "high"]
+    score: int
+    max_score: int
+    factors: list[RiskFactorResponse]
+    disclaimer: str

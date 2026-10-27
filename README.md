@@ -119,30 +119,59 @@ Contoh respons:
 
 ### `POST /predict`
 
-Memprediksi klasifikasi penyakit jantung. Request memerlukan 13 fitur numerik:
+Menghasilkan skor heuristik berbasis aturan dengan kategori `low`, `moderate`,
+atau `high`. Request memerlukan 13 fitur numerik:
 `age`, `sex`, `cp`, `trestbps`, `chol`, `fbs`, `restecg`, `thalach`, `exang`,
 `oldpeak`, `slope`, `ca`, dan `thal`.
 
-Endpoint memerlukan file model `models/heart_model.pkl`. Buat model terlebih
-dahulu (proses training dapat memerlukan waktu):
+Contoh request:
 
 ```bash
-python -m src.ml.train
+curl -X POST http://127.0.0.1:8000/predict \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "age": 70, "sex": 1, "cp": 1, "trestbps": 180, "chol": 400,
+    "fbs": 1, "restecg": 1, "thalach": 90, "exang": 1, "oldpeak": 2,
+    "slope": 3, "ca": 3, "thal": 7
+  }'
 ```
 
-Jika model belum tersedia, endpoint mengembalikan HTTP 503. Gunakan
-`/docs` untuk melihat schema request lengkap dan mencoba kedua endpoint.
+Respons mencakup `risk_level`, `score`, `max_score`, serta `factors` berisi
+kontribusi setiap fitur yang menambah skor. Nilai sistolik `trestbps` di luar
+rentang input yang diterima (70–250 mmHg), termasuk 400 mmHg, ditolak dengan
+HTTP 422. Kategori fitur harus sesuai definisi dataset.
+
+**Penting:** ini adalah heuristik edukasi berbobot yang dibuat agar aturannya
+transparan dan dapat diuji; ini bukan kalkulator risiko klinis tervalidasi,
+bukan diagnosis, dan bukan pengganti penilaian tenaga kesehatan. Batas usia, denyut jantung, serta ST depression adalah asumsi heuristik, bukan
+cut-off diagnostik. Skor tidak boleh digunakan untuk keputusan medis.
+
+Ambang tekanan darah sistolik mengacu secara umum pada kategori CDC: normal di
+bawah 120, 120–129 elevated, dan tekanan darah tinggi mulai 130 mmHg. Ini
+hanya mengatur poin faktor sistolik, bukan kategori diagnosis atau risiko
+jantung klinis. Ambang kolesterol total menggunakan pedoman umum MedlinePlus
+(<200 mg/dL diinginkan dan >=240 mg/dL tinggi).
+Pemetaan kode kategori mengikuti deskripsi Cleveland Heart Disease dari UCI.
+Bobot, pengelompokan skor, batas input sistolik 70–250, dan interpretasi
+gabungan fitur adalah asumsi rekayasa yang belum divalidasi secara klinis.
+Referensi: [CDC tentang tekanan darah](https://www.cdc.gov/high-blood-pressure/about/index.html),
+[MedlinePlus tentang kolesterol](https://medlineplus.gov/cholesterollevelswhatyouneedtoknow.html),
+dan [UCI Cleveland Heart Disease dataset](https://archive.ics.uci.edu/dataset/45/heart+disease).
+Pelatihan model machine learning lama tetap tersedia melalui
+`python -m src.ml.train`, tetapi tidak digunakan oleh endpoint `/predict`.
 
 ## Menjalankan Tes
 
 Jalankan tes API dan RAG:
 
 ```bash
-python -m pytest -q tests/test_main.py tests/test_backend_routes.py tests/test_rag.py
+python -m pytest -q tests/test_main.py tests/test_backend_routes.py \
+  tests/test_risk.py tests/test_rag.py
 ```
 
-Tes prediksi model yang sesungguhnya memerlukan file
-`models/heart_model.pkl`.
+Tes modul machine learning lama di `tests/test_ml.py` memerlukan file
+`models/heart_model.pkl`; endpoint `/predict` dan tes aturan risikonya tidak
+memerlukan artifact tersebut.
 
 ## Dokumentasi Tambahan
 
