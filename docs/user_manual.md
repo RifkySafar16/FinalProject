@@ -24,31 +24,32 @@ Isi formulir di panel kiri, lalu tekan tombol **Cek Risiko**.
 | Jenis kelamin | Laki-laki atau perempuan |
 | Tekanan darah atas (sistolik) | Angka pertama hasil tensi, dalam mmHg |
 | Kolesterol total | Dari hasil laboratorium, dalam mg/dl. Kalau hasilmu dalam mmol/l, aplikasi menampilkan petunjuk cara mengubahnya |
-| Gula darah puasa di atas 120 mg/dl? | Pilih Tidak, Ya, atau Tidak tahu |
+| Gula darah puasa di atas 120 mg/dl? | Pilih Tidak atau Ya |
 | Keluhan nyeri dada | Pilih yang paling sesuai |
 | Nyeri dada saat olahraga atau aktivitas berat? | Tidak atau Ya |
 
-### Data klinis (opsional)
+### Data klinis (wajib)
 
-Kalau kamu punya hasil pemeriksaan jantung (EKG, uji treadmill, dan sejenisnya), buka bagian **"Data klinis dari hasil pemeriksaan (opsional)"**, lalu centang **"Pakai data klinis yang saya isi di bawah"**.
+Bagian **Data klinis** juga wajib diisi. Datanya diambil dari hasil pemeriksaan jantung: EKG, uji latih jantung (treadmill), fluoroskopi, dan tes thalium. Kalau belum tahu nilainya, tanyakan ke dokter atau lihat laporan hasil pemeriksaanmu.
 
-Kalau tidak punya, **tidak masalah**. Biarkan kosong, dan aplikasi memakai nilai rata-rata. Konsekuensinya hasil menjadi **kurang akurat**, dan aplikasi akan memberi tahu kamu.
+Semua isian awalnya kosong. Kalau masih ada yang belum diisi saat menekan **Cek Risiko**, aplikasi menampilkan daftar isian yang perlu dilengkapi.
 
 ## 3. Membaca hasil
 
-Hasil tampil di halaman utama berupa pengukur (gauge) berwarna dan persentase.
+Hasil tampil di halaman utama berupa pengukur (gauge) berwarna dengan skor dari 13 faktor (maksimal 41 poin).
 
 | Warna | Kategori | Artinya |
 |---|---|---|
-| Hijau (di bawah 30%) | Risiko rendah | Pola datamu mirip kelompok dengan risiko rendah. Tetap jaga gaya hidup sehat dan periksa kesehatan berkala |
-| Kuning (30 sampai 60%) | Risiko sedang | Pola datamu mirip kelompok dengan risiko sedang. Sebaiknya konsultasikan dengan dokter dan perhatikan faktor risiko yang masih bisa diubah |
-| Merah (di atas 60%) | Risiko tinggi | Pola datamu mirip kelompok dengan risiko tinggi. Segera konsultasikan dengan dokter untuk pemeriksaan lebih lanjut |
+| Hijau (skor 0–10) | Risiko rendah | Tetap jaga gaya hidup sehat dan periksa kesehatan berkala |
+| Kuning (skor 11–22) | Risiko sedang | Sebaiknya konsultasikan dengan dokter dan perhatikan faktor risiko yang masih bisa diubah |
+| Merah (skor 23 ke atas) | Risiko tinggi | Segera konsultasikan dengan dokter untuk pemeriksaan lebih lanjut |
+
+Di bawah pengukur ada daftar **faktor yang menambah skor**, lengkap dengan poin dan alasannya.
 
 Yang perlu kamu pahami:
-- Angka itu **perkiraan model**, bukan hasil diagnosis. Model dilatih dari data 303 pasien rumah sakit di Cleveland (data akhir 1980-an), sehingga belum tentu mewakili kondisi masyarakat Indonesia saat ini.
-- Batas warna (30% dan 60%) adalah keputusan tim, **bukan standar kedokteran**.
+- Skor ini adalah **heuristik edukasi** dengan aturan sederhana, bukan hasil diagnosis atau kalkulator risiko klinis tervalidasi.
+- Batas kategori adalah keputusan tim, **bukan standar kedokteran**.
 - Hasil rendah **bukan jaminan** bebas penyakit jantung.
-- Kalau muncul catatan "hasil kurang akurat karena sebagian data diperkirakan", artinya ada data yang tidak kamu isi.
 
 ## 4. Tanya pedoman WHO (chat)
 

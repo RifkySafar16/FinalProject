@@ -1,24 +1,15 @@
 """Form data kesehatan untuk endpoint /predict.
 
-Model membutuhkan 13 fitur. Tujuh data dasar wajib diisi pengguna.
-Enam data klinis bersifat opsional: bila tidak diisi, dipakai nilai
-bawaan (median/modus data latih Cleveland) dan hasil ditandai kurang akurat.
+Skor risiko dihitung dari 13 faktor, dan SEMUA faktor wajib diisi pengguna:
+7 data dasar dan 6 data klinis dari hasil pemeriksaan jantung. Tidak ada
+nilai bawaan; form menolak dikirim selama masih ada isian yang kosong.
 """
 
 from __future__ import annotations
 
-import streamlit as st
+from typing import Any
 
-# Nilai bawaan data klinis = median (angka) atau modus (kategori)
-# dari data/processed/cleveland_clean.csv.
-CLINICAL_DEFAULTS: dict[str, float] = {
-    "restecg": 0,
-    "thalach": 153,
-    "oldpeak": 0.8,
-    "slope": 1,
-    "ca": 0,
-    "thal": 3,
-}
+import streamlit as st
 
 CHEST_PAIN_OPTIONS: dict[int, str] = {
     4: "Tidak ada nyeri dada",
@@ -42,112 +33,112 @@ SLOPE_OPTIONS = {
     2: "Datar (flat)",
     3: "Turun (downsloping)",
 }
+CA_OPTIONS = {
+    0: "0 pembuluh",
+    1: "1 pembuluh",
+    2: "2 pembuluh",
+    3: "3 pembuluh",
+}
 THAL_OPTIONS = {
     3: "Normal",
     6: "Kelainan menetap (fixed defect)",
     7: "Kelainan yang dapat pulih (reversible defect)",
 }
 
+PLACEHOLDER = "Pilih salah satu"
+
+# Nama isian untuk pesan "belum diisi", sesuai urutan tampil di form.
+FIELD_LABELS = {
+    "age": "Usia",
+    "sex": "Jenis kelamin",
+    "trestbps": "Tekanan darah",
+    "chol": "Kolesterol total",
+    "fbs": "Gula darah puasa",
+    "cp": "Keluhan nyeri dada",
+    "exang": "Nyeri dada saat olahraga",
+    "restecg": "Hasil EKG saat istirahat",
+    "thalach": "Detak jantung maksimum",
+    "oldpeak": "Penurunan segmen ST",
+    "slope": "Kemiringan segmen ST",
+    "ca": "Jumlah pembuluh darah (fluoroskopi)",
+    "thal": "Hasil tes thalium",
+}
+
+
+def _choice(label: str, options: dict[int, str], help_text: str | None = None) -> int | None:
+    return st.selectbox(
+        label, list(options), index=None, placeholder=PLACEHOLDER,
+        format_func=options.get, help=help_text,
+    )
+
+
+def _yes_no(label: str) -> float | None:
+    answer = st.radio(label, ["Tidak", "Ya"], index=None, horizontal=True)
+    if answer is None:
+        return None
+    return 1.0 if answer == "Ya" else 0.0
+
 
 def render_form() -> tuple[dict[str, float], list[str]] | None:
-    """Tampilkan form. Kembalikan (fitur, daftar_data_diperkirakan) saat dikirim."""
+    """Tampilkan form. Kembalikan (fitur, []) saat dikirim dan semua isian lengkap."""
     with st.form("form_risiko"):
+        st.caption("Semua isian **wajib** diisi.")
         st.subheader("Data dasar")
 
-        age = st.number_input(
-            "Usia (tahun)", min_value=18, max_value=100, value=50, step=1,
+        values: dict[str, Any] = {}
+        values["age"] = st.number_input(
+            "Usia (tahun)", min_value=18, max_value=100, value=None, step=1,
+            placeholder="Contoh: 50",
             help="Data acuan (dataset Cleveland) berisi pasien berusia 29–77 tahun.",
         )
         sex = st.radio(
-            "Jenis kelamin", ["Laki-laki", "Perempuan"], horizontal=True,
+            "Jenis kelamin", ["Laki-laki", "Perempuan"], index=None, horizontal=True,
         )
-        trestbps = st.number_input(
+        values["sex"] = None if sex is None else (1.0 if sex == "Laki-laki" else 0.0)
+        values["trestbps"] = st.number_input(
             "Tekanan darah atas / sistolik (mmHg)",
-            min_value=80, max_value=220, value=120, step=1,
+            min_value=80, max_value=220, value=None, step=1, placeholder="Contoh: 120",
             help="Angka pertama hasil tensi. Contoh: tensi 120/80 → isi 120.",
         )
-        chol = st.number_input(
+        values["chol"] = st.number_input(
             "Kolesterol total (mg/dl)",
-            min_value=100, max_value=600, value=200, step=1,
+            min_value=100, max_value=600, value=None, step=1, placeholder="Contoh: 200",
             help="Bila hasil lab dalam mmol/l, kalikan 38,67. Contoh: 5,2 mmol/l ≈ 201 mg/dl.",
         )
-        fbs_answer = st.radio(
-            "Gula darah puasa di atas 120 mg/dl?",
-            ["Tidak", "Ya", "Tidak tahu"], horizontal=True,
-        )
-        cp = st.selectbox(
-            "Keluhan nyeri dada",
-            options=list(CHEST_PAIN_OPTIONS),
-            format_func=CHEST_PAIN_OPTIONS.get,
-            help=CHEST_PAIN_HELP,
-        )
-        exang_answer = st.radio(
-            "Nyeri dada saat olahraga atau aktivitas berat?",
-            ["Tidak", "Ya"], horizontal=True,
-        )
+        values["fbs"] = _yes_no("Gula darah puasa di atas 120 mg/dl?")
+        values["cp"] = _choice("Keluhan nyeri dada", CHEST_PAIN_OPTIONS, CHEST_PAIN_HELP)
+        values["exang"] = _yes_no("Nyeri dada saat olahraga atau aktivitas berat?")
 
-        with st.expander("Data klinis dari hasil pemeriksaan (opsional)"):
-            use_clinical = st.checkbox(
-                "Pakai data klinis yang saya isi di bawah",
-                help="Biarkan kosong bila tidak punya hasil EKG, uji treadmill, "
-                     "atau pemeriksaan jantung lain. Sistem akan memakai nilai rata-rata.",
-            )
-            restecg = st.selectbox(
-                "Hasil EKG saat istirahat", list(RESTECG_OPTIONS),
-                format_func=RESTECG_OPTIONS.get,
-            )
-            thalach = st.number_input(
-                "Detak jantung maksimum saat uji treadmill (kali/menit)",
-                min_value=60, max_value=220, value=int(CLINICAL_DEFAULTS["thalach"]),
-            )
-            oldpeak = st.number_input(
-                "Penurunan segmen ST saat latihan (oldpeak)",
-                min_value=0.0, max_value=6.5, value=CLINICAL_DEFAULTS["oldpeak"], step=0.1,
-            )
-            slope = st.selectbox(
-                "Kemiringan segmen ST saat latihan", list(SLOPE_OPTIONS),
-                format_func=SLOPE_OPTIONS.get,
-            )
-            ca = st.selectbox(
-                "Jumlah pembuluh darah utama yang tampak pada fluoroskopi",
-                [0, 1, 2, 3],
-            )
-            thal = st.selectbox(
-                "Hasil tes thalium", list(THAL_OPTIONS),
-                format_func=THAL_OPTIONS.get,
-            )
+        st.subheader("Data klinis")
+        st.caption(
+            "Diambil dari hasil pemeriksaan jantung: EKG, uji latih jantung "
+            "(treadmill), fluoroskopi, dan tes thalium. Tanyakan ke dokter atau "
+            "lihat laporan hasil pemeriksaan bila belum tahu."
+        )
+        values["restecg"] = _choice("Hasil EKG saat istirahat", RESTECG_OPTIONS)
+        values["thalach"] = st.number_input(
+            "Detak jantung maksimum saat uji treadmill (kali/menit)",
+            min_value=60, max_value=220, value=None, step=1, placeholder="Contoh: 150",
+        )
+        values["oldpeak"] = st.number_input(
+            "Penurunan segmen ST saat latihan (oldpeak)",
+            min_value=0.0, max_value=6.5, value=None, step=0.1, placeholder="Contoh: 1.0",
+        )
+        values["slope"] = _choice("Kemiringan segmen ST saat latihan", SLOPE_OPTIONS)
+        values["ca"] = _choice(
+            "Jumlah pembuluh darah utama yang tampak pada fluoroskopi", CA_OPTIONS,
+        )
+        values["thal"] = _choice("Hasil tes thalium", THAL_OPTIONS)
 
         submitted = st.form_submit_button("Cek Risiko", type="primary")
 
     if not submitted:
         return None
 
-    estimated: list[str] = []
-    fbs = 1 if fbs_answer == "Ya" else 0
-    if fbs_answer == "Tidak tahu":
-        estimated.append("gula darah puasa (dianggap normal)")
+    missing = [FIELD_LABELS[key] for key in FIELD_LABELS if values.get(key) is None]
+    if missing:
+        st.error("Lengkapi dulu semua isian. Belum diisi: " + ", ".join(missing) + ".")
+        return None
 
-    features: dict[str, float] = {
-        "age": float(age),
-        "sex": 1.0 if sex == "Laki-laki" else 0.0,
-        "cp": float(cp),
-        "trestbps": float(trestbps),
-        "chol": float(chol),
-        "fbs": float(fbs),
-        "exang": 1.0 if exang_answer == "Ya" else 0.0,
-    }
-
-    if use_clinical:
-        features.update({
-            "restecg": float(restecg),
-            "thalach": float(thalach),
-            "oldpeak": float(oldpeak),
-            "slope": float(slope),
-            "ca": float(ca),
-            "thal": float(thal),
-        })
-    else:
-        features.update({k: float(v) for k, v in CLINICAL_DEFAULTS.items()})
-        estimated.append("6 data klinis (memakai nilai rata-rata)")
-
-    return features, estimated
+    features = {key: float(values[key]) for key in FIELD_LABELS}
+    return features, []
