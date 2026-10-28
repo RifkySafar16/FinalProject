@@ -52,21 +52,23 @@ def _butuh_llm():
 
 
 # ==========================================
-# /predict (Machine Learning)
+# /predict (skor risiko berbasis aturan)
 # ==========================================
 
 def test_predict_valid_input():
-    """Profil B pada laporan: harus 200, bentuk respons benar, probabilitas wajar."""
-    _butuh_model()
+    """Profil B pada laporan: harus 200, bentuk respons skor benar, kategori sedang."""
     response = client.post("/predict", json=PROFIL_B)
     assert response.status_code == 200
     data = response.json()
-    assert "prediction" in data
-    assert "label" in data
-    assert isinstance(data["probability_presence"], float)
-    assert 0.0 <= data["probability_presence"] <= 1.0
-    # Pemeriksaan kewajaran: laporan mencatat kira-kira 45% (kategori sedang).
-    assert 0.30 <= data["probability_presence"] <= 0.60
+    assert data["risk_level"] in ("low", "moderate", "high")
+    assert isinstance(data["score"], int)
+    assert 0 <= data["score"] <= data["max_score"]
+    assert isinstance(data["factors"], list) and data["factors"]
+    for factor in data["factors"]:
+        assert {"feature", "value", "points", "reason"} <= set(factor)
+    assert data["disclaimer"]
+    # Pemeriksaan kewajaran: profil B termasuk kategori sedang.
+    assert data["risk_level"] == "moderate"
 
 
 def test_predict_invalid_input_type():

@@ -102,5 +102,5 @@ render_chat(
     api_client.ask,
     api_client.ApiError,
     features=st.session_state.get("features") if result else None,
-    level=categorize(result["probability_presence"]) if result else None,
+    level=categorize(result) if result else None,
 )
