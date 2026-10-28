@@ -8,12 +8,12 @@ Backend dibangun dengan FastAPI (`src/backend/`) dan menjadi satu-satunya pintu 
 
 | Endpoint | Fungsi | Masukan | Keluaran |
 |---|---|---|---|
-| `POST /predict` | Perkiraan risiko penyakit jantung | 13 fitur numerik | `prediction`, `label`, `probability_presence` |
+| `POST /predict` | Skor risiko penyakit jantung | 13 fitur numerik | `risk_level`, `score`, `max_score`, `factors`, `disclaimer` |
 | `POST /chat` | Tanya jawab pedoman WHO 2007 | `question` (3 sampai 500 karakter) | `answer`, `sources` |
 
 ## POST /predict
 
-Memprediksi probabilitas adanya penyakit jantung. Semua 13 fitur wajib dikirim. Frontend mengisi data klinis yang kosong dengan nilai bawaan sebelum memanggil endpoint ini.
+Menghitung skor risiko penyakit jantung dengan aturan sederhana dan transparan (`src/ml/risk.py`). Setiap faktor diberi poin; total poin menentukan kategori risiko. Semua 13 fitur wajib dikirim. Frontend mengisi data klinis yang kosong dengan nilai bawaan sebelum memanggil endpoint ini.
 
 ### Body (JSON)
 
@@ -49,13 +49,19 @@ Jenis dan rentang divalidasi oleh Pydantic.
 
 ```json
 {
-  "prediction": 0,
-  "label": "...",
-  "probability_presence": 0.45
+  "risk_level": "moderate",
+  "score": 19,
+  "max_score": 41,
+  "factors": [
+    {"feature": "age", "value": 58.0, "points": 2, "reason": "usia 45-64 tahun (ambang heuristik)"},
+    {"feature": "trestbps", "value": 150.0, "points": 6, "reason": "tekanan sistolik istirahat >=130 mmHg"},
+    {"feature": "exang", "value": 1.0, "points": 4, "reason": "ada angina saat olahraga"}
+  ],
+  "disclaimer": "Skor ini adalah heuristik edukasi, bukan diagnosis atau kalkulator risiko klinis tervalidasi. Konsultasikan hasil kesehatan dengan tenaga medis."
 }
 ```
 
-Probabilitas untuk profil ini sekitar 45% (Tabel 5.2 laporan). Nilai `prediction` dan `label` mengikuti keputusan model; isi persisnya dicek di Swagger UI.
+Daftar `factors` di atas dipersingkat; respons asli profil B memuat 7 faktor. Kategori: `low` skor 0–10, `moderate` 11–22, `high` 23 ke atas.
 
 ### Kode respons
 
@@ -63,11 +69,10 @@ Probabilitas untuk profil ini sekitar 45% (Tabel 5.2 laporan). Nilai `prediction
 |---|---|
 | 200 | Berhasil |
 | 422 | Input tidak valid (tipe atau rentang salah, field hilang) |
-| 503 | Model belum tersedia (belum dilatih atau berkas model tidak ada) |
 
 ### Catatan
-- Respons `/predict` **belum membawa disclaimer**. Disclaimer untuk hasil risiko ditambahkan oleh frontend (temuan laporan Bab 5.5 no.5).
-- Kategori risiko (rendah < 30%, sedang 30 sampai 60%, tinggi > 60%) ditentukan oleh frontend, bukan API.
+- Respons `/predict` membawa `disclaimer` sendiri; frontend menampilkannya di bawah hasil.
+- Kategori risiko ditentukan oleh API (`risk_level`), lalu frontend menerjemahkannya menjadi rendah, sedang, atau tinggi.
 
 ## POST /chat
 

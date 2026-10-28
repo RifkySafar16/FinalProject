@@ -56,7 +56,7 @@ def render_form() -> tuple[dict[str, float], list[str]] | None:
 
         age = st.number_input(
             "Usia (tahun)", min_value=18, max_value=100, value=50, step=1,
-            help="Model dilatih dengan data pasien berusia 29–77 tahun.",
+            help="Data acuan (dataset Cleveland) berisi pasien berusia 29–77 tahun.",
         )
         sex = st.radio(
             "Jenis kelamin", ["Laki-laki", "Perempuan"], horizontal=True,

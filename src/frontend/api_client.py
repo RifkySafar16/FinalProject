@@ -42,7 +42,8 @@ def check_backend() -> bool:
 def predict(features: dict[str, float]) -> dict[str, Any]:
     """Kirim 13 fitur ke /predict.
 
-    Hasil: {"prediction": 0|1, "label": str, "probability_presence": float}
+    Hasil: {"risk_level": "low"|"moderate"|"high", "score": int,
+            "max_score": int, "factors": [...], "disclaimer": str}
     """
     if USE_MOCK:
         return _mock_predict(features)
@@ -107,17 +108,27 @@ def _read_detail(response: requests.Response) -> str:
 # ---------------------------------------------------------------------------
 
 def _mock_predict(features: dict[str, float]) -> dict[str, Any]:
-    score = 0.15
-    score += 0.004 * max(features["age"] - 40, 0)
-    score += 0.003 * max(features["trestbps"] - 120, 0)
-    score += 0.001 * max(features["chol"] - 200, 0)
-    score += 0.15 * features["exang"] + 0.1 * features["fbs"]
-    probability = min(score, 0.95)
-    prediction = int(probability >= 0.5)
+    factors = []
+    if features["age"] >= 45:
+        factors.append({"feature": "age", "value": features["age"], "points": 2,
+                        "reason": "usia 45 tahun ke atas (contoh)"})
+    if features["trestbps"] >= 130:
+        factors.append({"feature": "trestbps", "value": features["trestbps"],
+                        "points": 6, "reason": "tekanan darah tinggi (contoh)"})
+    if features["chol"] >= 240:
+        factors.append({"feature": "chol", "value": features["chol"], "points": 2,
+                        "reason": "kolesterol tinggi (contoh)"})
+    if features["exang"] == 1:
+        factors.append({"feature": "exang", "value": 1.0, "points": 4,
+                        "reason": "ada nyeri dada saat olahraga (contoh)"})
+    score = sum(f["points"] for f in factors)
+    level = "low" if score <= 10 else "moderate" if score <= 22 else "high"
     return {
-        "prediction": prediction,
-        "label": "presence" if prediction else "absence",
-        "probability_presence": probability,
+        "risk_level": level,
+        "score": score,
+        "max_score": 41,
+        "factors": factors,
+        "disclaimer": "Mode contoh: skor ini bukan hasil perhitungan asli.",
     }
 
 
