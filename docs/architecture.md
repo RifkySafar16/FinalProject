@@ -41,10 +41,10 @@ Frontend hanya berbicara dengan backend. Backend memanggil model ML (lokal) dan 
 ## 3. Alur data
 
 ### 3.1 Cek risiko
-1. Pengguna mengisi 7 data dasar (dan 6 data klinis opsional).
-2. Frontend melengkapi data klinis yang kosong dengan nilai bawaan dari data latih, lalu mengirim 13 fitur ke `POST /predict`.
-3. Backend memvalidasi jenis dan rentang nilai, lalu memanggil model.
-4. Model mengembalikan probabilitas. Frontend mengubahnya menjadi kategori: rendah (< 30%), sedang (30 sampai 60%), tinggi (> 60%). Ambang ini keputusan tim, bukan standar klinis.
+1. Pengguna wajib mengisi ke-13 data: 7 data dasar dan 6 data klinis. Form menolak dikirim selama masih ada isian kosong.
+2. Frontend mengirim 13 fitur ke `POST /predict`.
+3. Backend memvalidasi jenis dan rentang nilai, lalu menghitung skor risiko berbasis aturan (`src/ml/risk.py`).
+4. Backend mengembalikan kategori (`low`/`moderate`/`high`, skor 0–10, 11–22, ≥ 23), skor, dan faktor penyebabnya. Ambang ini keputusan tim, bukan standar klinis.
 
 ### 3.2 Tanya pedoman WHO
 1. Pengguna mengetik pertanyaan atau menekan pertanyaan siap-klik. Frontend mengirim ke `POST /chat`.
