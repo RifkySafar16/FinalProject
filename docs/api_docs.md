@@ -13,7 +13,7 @@ Backend dibangun dengan FastAPI (`src/backend/`) dan menjadi satu-satunya pintu 
 
 ## POST /predict
 
-Menghitung skor risiko penyakit jantung dengan aturan sederhana dan transparan (`src/ml/risk.py`). Setiap faktor diberi poin; total poin menentukan kategori risiko. Semua 13 fitur wajib dikirim. Frontend mengisi data klinis yang kosong dengan nilai bawaan sebelum memanggil endpoint ini.
+Menghitung skor risiko penyakit jantung dengan aturan sederhana dan transparan (`src/ml/risk.py`). Setiap faktor diberi poin; total poin menentukan kategori risiko. Semua 13 fitur wajib dikirim; frontend juga mewajibkan pengguna mengisi ke-13 data sebelum memanggil endpoint ini.
 
 ### Body (JSON)
 
@@ -35,7 +35,7 @@ Menghitung skor risiko penyakit jantung dengan aturan sederhana dan transparan (
 
 Jenis dan rentang divalidasi oleh Pydantic.
 
-### Contoh permintaan (profil B pada laporan, data klinis memakai nilai bawaan)
+### Contoh permintaan (profil B pada laporan)
 
 ```json
 {
